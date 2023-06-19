@@ -169,6 +169,15 @@ class Database:
 
     def add_potd(self, id, index, name):
         query = f"""
+                    ALTER TABLE handles
+                    ADD %s BOOLEAN DEFAULT false
+                """
+        curr = self.conn.cursor()
+        curr.execute(query % ('"' + 'solved_' + datetime.today().strftime('%Y-%m-%d') + '"',))
+        self.conn.commit()
+        curr.close()
+
+        query = f"""
                     INSERT INTO potds
                     (id, index, name, use_date)
                     VALUES
@@ -194,6 +203,28 @@ class Database:
         if len(data) == 0:
             return None
         return Problem(data[-1][0], data[-1][1], data[-1][2])
+
+    def check_user_potd(self, cf_handle):
+        query = f"""
+                    SELECT * FROM handles
+                    WHERE cf_handle=%s
+                """
+        curr = self.conn.cursor()
+        curr.execute(query, (cf_handle,))
+        data = curr.fetchone()
+        curr.close()
+        return data[-1]
+    
+    def set_user_potd(self, cf_handle):
+        query = f"""
+                    UPDATE handles
+                    SET %s = true
+                    WHERE cf_handle=%s
+                """
+        curr = self.conn.cursor()
+        curr.execute(query % ('"' + 'solved_' + datetime.today().strftime('%Y-%m-%d') + '"', "'" + cf_handle + "'"))
+        self.conn.commit()
+        curr.close()
 
     def set_used(self, id, index, name):
         query = f"""
