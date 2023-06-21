@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import database
 import cf_api
 
-from constants import POTD_CHANNEL, POTD_GUILD
+from constants import POTD_PROBLEMS, POTD_GUILD, POTD_ANNOUNCE
 
 from collections import namedtuple
 import string
@@ -55,13 +55,13 @@ async def on_ready():
 
     if (db.get_potd() is None):
         await select_potd()
-    await update_solvers()
-    print('Solvers updated')
+    # await update_solvers()
+    # print('Solvers updated')
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(select_potd, CronTrigger(hour="0"))
-    scheduler.add_job(update_solvers, 'interval', minutes=10)
-
+    scheduler.add_job(update_solvers, 'interval', minutes=1)
+    scheduler.start()
 
 @bot.command(name='identify_handle', help='Set your CF handle')
 async def identify_handle(ctx, handle: str=None):
@@ -89,9 +89,9 @@ async def identify_handle(ctx, handle: str=None):
     
     res = ''.join(random.choices(string.ascii_uppercase + string.digits, k=15))
     await ctx.send(
-                        f"Please change your first name on this [link](https://codeforces.com/settings/social) to "
-                        f"`{res}` within 15 seconds {ctx.author.mention}")
-    await asyncio.sleep(15)
+                        f"Please change your first name on https://codeforces.com/settings/social to "
+                        f"`{res}` within 30 seconds {ctx.author.mention}")
+    await asyncio.sleep(30)
 
     if res != await cf.get_first_name(handle):
         await ctx.send(f"Unable to set handle, please try again {ctx.author.mention}")
@@ -252,8 +252,14 @@ async def select_potd():
     problem = (await find_problem(diff))[0]
     db.add_potd(id=problem.id, index=problem.index, name=problem.name)
     db.set_used(id=problem.id, index=problem.index, name=problem.name)
-    await bot.get_channel(POTD_CHANNEL).send(
+    await bot.get_channel(POTD_PROBLEMS).send("<@1120846668833771560>", 
         embed=Embed(title="New POTD!", description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})", color=Color.blue()))
+
+@bot.command(name="get_potd", help="Get the current POTD")
+async def get_potd(ctx):
+    problem = db.get_potd()
+    await ctx.send(
+        embed=Embed(title="Today's POTD", description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})", color=Color.blue()))
 
 async def check_solved(handle, id, index):
     subs = await cf.get_user_problems(handle, 50)
@@ -270,15 +276,17 @@ async def update_solvers():
     for user in users:
         if await check_solved(user[2], problem.id, problem.index) and not db.check_user_potd(user[2]):
             db.set_user_potd(user[2])
-            await bot.get_channel(POTD_CHANNEL).send(f"Congratulations to <@{user[1]}> for solving the POTD!")
+            msg = await bot.get_channel(POTD_ANNOUNCE).send(f"Congratulations to <@{user[1]}> for solving the POTD!")
+            await msg.add_reaction("<:orz:1105018917828698204>")
+    print("Solvers updated")
 
 
 @bot.command(name="update_potd", help="Update list of POTD solvers")
 async def update_potd(ctx):
     await update_solvers()
 
-@bot.command(name="leaderboard", help="Show leaderboard of current streak holders")
-async def leaderboard(ctx):
+@bot.command(name="streak_leaderboard", help="Show leaderboard of current streak holders")
+async def streak_leaderboard(ctx):
     users = db.get_all_handles()
     user_lb = []
     for user in users:
@@ -288,9 +296,32 @@ async def leaderboard(ctx):
             streak += 1
         user_lb.append([streak, user[2]])
     user_lb.sort()
+    user_lb.reverse()
+    curr_place = 1
+    lb_strings = []
     for i in range(len(user_lb)):
-        user_lb[i] = str(i + 1) + ". " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " day" + ("s" if user_lb[i][0] != 1 else "")
-    await ctx.send(embed=Embed(title="Current Streak Leaderboard", description='\n'.join(user_lb), color=Color.orange()))
+        if (i == 0 or user_lb[i - 1][0] != user_lb[i][0]):
+            curr_place = i + 1
+        lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " day" + ("s" if user_lb[i][0] != 1 else ""))
+    await ctx.send(embed=Embed(title="Current Streak Leaderboard", description='\n'.join(lb_strings), color=Color.orange()))
 
+@bot.command(name="solves_leaderboard", help="Show leaderboard of problems solved")
+async def solves_leaderboard(ctx):
+    users = db.get_all_handles()
+    user_lb = []
+    for user in users:
+        solved = 0
+        for i in range(len(user) - 1, 3, -1):
+            solved += user[i]
+        user_lb.append([solved, user[2]])
+    user_lb.sort()
+    user_lb.reverse()
+    curr_place = 1
+    lb_strings = []
+    for i in range(len(user_lb)):
+        if (i == 0 or user_lb[i - 1][0] != user_lb[i][0]):
+            curr_place = i + 1
+        lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " problem" + ("s" if user_lb[i][0] != 1 else ""))
+    await ctx.send(embed=Embed(title="Current Solves Leaderboard", description='\n'.join(lb_strings), color=Color.purple()))
 
 bot.run(TOKEN)
