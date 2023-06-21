@@ -246,20 +246,20 @@ async def find_problem(rating):
     if not problem:
         return [False, f"Not enough problems with rating {rating} left!"]
 
-potd_difficulties = [800, 1000, 800, 900, 1000, 1400, 1200]
+potd_difficulties = [800, 1200, 900, 1300, 1000, 1600, 1400]
 async def select_potd():
     diff = potd_difficulties[datetime.today().weekday()]
     problem = (await find_problem(diff))[0]
     db.add_potd(id=problem.id, index=problem.index, name=problem.name)
     db.set_used(id=problem.id, index=problem.index, name=problem.name)
-    await bot.get_channel(POTD_PROBLEMS).send("<@1120846668833771560>", 
-        embed=Embed(title="New POTD!", description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})", color=Color.blue()))
+    await bot.get_channel(POTD_PROBLEMS).send("<@&1120846668833771560>", 
+        embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})", color=Color.blue()))
 
 @bot.command(name="get_potd", help="Get the current POTD")
 async def get_potd(ctx):
     problem = db.get_potd()
     await ctx.send(
-        embed=Embed(title="Today's POTD", description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})", color=Color.blue()))
+        embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})", color=Color.blue()))
 
 async def check_solved(handle, id, index):
     subs = await cf.get_user_problems(handle, 50)
@@ -276,7 +276,7 @@ async def update_solvers():
     for user in users:
         if await check_solved(user[2], problem.id, problem.index) and not db.check_user_potd(user[2]):
             db.set_user_potd(user[2])
-            msg = await bot.get_channel(POTD_ANNOUNCE).send(f"Congratulations to <@{user[1]}> for solving the POTD!")
+            msg = await bot.get_channel(POTD_ANNOUNCE).send(f"Congratulations to <@{user[1]}> for solving POTD " + datetime.today().strftime('%m/%d/%Y') + "!")
             await msg.add_reaction("<:orz:1105018917828698204>")
     print("Solvers updated")
 
