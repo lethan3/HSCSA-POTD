@@ -272,6 +272,7 @@ async def check_solved(handle, id, index):
 
 async def update_solvers():
     problem = db.get_potd()
+    if problem is None: return
     users = db.get_all_handles(POTD_GUILD)
     for user in users:
         if await check_solved(user[2], problem.id, problem.index) and not db.check_user_potd(user[2]):
