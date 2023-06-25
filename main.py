@@ -293,7 +293,9 @@ async def streak_leaderboard(ctx):
     for user in users:
         streak = 0
         for i in range(len(user) - 1, 3, -1):
-            if not user[i]: break
+            if not user[i]:
+                if (i == len(user) - 1): continue
+                else: break
             streak += 1
         user_lb.append([streak, user[2]])
     user_lb.sort()
