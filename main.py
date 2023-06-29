@@ -306,7 +306,7 @@ async def streak_leaderboard(ctx):
         if (i == 0 or user_lb[i - 1][0] != user_lb[i][0]):
             curr_place = i + 1
         lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " day" + ("s" if user_lb[i][0] != 1 else ""))
-    await ctx.send(embed=Embed(title="Current Streak Leaderboard", description='\n'.join(lb_strings), color=Color.orange()))
+    await ctx.send(embed=Embed(title="Current Streak Leaderboard", description=discord.utils.escape_markdown('\n'.join(lb_strings)), color=Color.orange()))
 
 @bot.command(name="solves_leaderboard", help="Show leaderboard of problems solved")
 async def solves_leaderboard(ctx):
@@ -325,6 +325,6 @@ async def solves_leaderboard(ctx):
         if (i == 0 or user_lb[i - 1][0] != user_lb[i][0]):
             curr_place = i + 1
         lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " problem" + ("s" if user_lb[i][0] != 1 else ""))
-    await ctx.send(embed=Embed(title="Current Solves Leaderboard", description='\n'.join(lb_strings), color=Color.purple()))
+    await ctx.send(embed=Embed(title="Current Solves Leaderboard", description=discord.utils.escape_markdown('\n'.join(lb_strings)), color=Color.purple()))
 
 bot.run(TOKEN)
