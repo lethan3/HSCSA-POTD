@@ -248,6 +248,8 @@ async def find_problem(rating):
 
 potd_difficulties = [800, 1200, 900, 1300, 1000, 1600, 1400]
 async def select_potd():
+    while (datetime.today().hour == 23):
+        pass
     diff = potd_difficulties[datetime.today().weekday()]
     problem = (await find_problem(diff))[0]
     db.add_potd(id=problem.id, index=problem.index, name=problem.name)
