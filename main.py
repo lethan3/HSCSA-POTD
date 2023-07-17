@@ -210,7 +210,7 @@ async def remove_handle(ctx, member: discord.Member = None):
         embed=Embed(description=f"Handle for {member.mention} removed successfully", color=Color.green()))
 
 
-def isNonStandard(contest_name):
+def is_non_standard(contest_name):
     names = [
         'wild', 'fools', 'unrated', 'surprise', 'unknown', 'friday', 'q#', 'testing',
         'marathon', 'kotlin', 'onsite', 'experimental', 'abbyy']
@@ -232,12 +232,12 @@ async def update_problemset():
 
     for contest in contest_list:
         mapping[contest['id']] = contest['name']
-        if contest['id'] not in contest_id and contest['phase'] == "FINISHED" and not isNonStandard(contest['name']):
+        if contest['id'] not in contest_id and contest['phase'] == "FINISHED" and not is_non_standard(contest['name']):
             con_cnt += 1
             db.add_contest(contest['id'], contest['name'])
 
     for problem in problem_list:
-        if problem['contestId'] in mapping and not isNonStandard(
+        if problem['contestId'] in mapping and not is_non_standard(
                 mapping[problem['contestId']]) and 'rating' in problem and problem['contestId'] not in problem_id:
             prob_cnt += 1
             db.add_problem(problem['contestId'], problem['index'], problem['name'], problem['type'], problem['rating'],
