@@ -50,7 +50,7 @@ async def on_ready():
     await update_problemset()
     print('Problemset updated')
 
-    if (db.get_potd() is None):
+    if db.get_potd() is None:
         await select_potd()
     # await update_solvers()
     # print('Solvers updated')
@@ -260,7 +260,7 @@ potd_difficulties = [800, 1200, 900, 1300, 1000, 1600, 1400]
 
 
 async def select_potd():
-    while (datetime.today().hour == 23):
+    while datetime.today().hour == 23:
         pass
     diff = potd_difficulties[datetime.today().weekday()]
     problem = (await find_problem(diff))[0]
@@ -319,7 +319,7 @@ async def streak_leaderboard(ctx):
         streak = 0
         for i in range(len(user) - 1, 3, -1):
             if not user[i]:
-                if (i == len(user) - 1):
+                if i == len(user) - 1:
                     continue
                 else:
                     break
@@ -330,7 +330,7 @@ async def streak_leaderboard(ctx):
     curr_place = 1
     lb_strings = []
     for i in range(len(user_lb)):
-        if (i == 0 or user_lb[i - 1][0] != user_lb[i][0]):
+        if i == 0 or user_lb[i - 1][0] != user_lb[i][0]:
             curr_place = i + 1
         lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " day" + (
             "s" if user_lb[i][0] != 1 else ""))
@@ -352,7 +352,7 @@ async def solves_leaderboard(ctx):
     curr_place = 1
     lb_strings = []
     for i in range(len(user_lb)):
-        if (i == 0 or user_lb[i - 1][0] != user_lb[i][0]):
+        if i == 0 or user_lb[i - 1][0] != user_lb[i][0]:
             curr_place = i + 1
         lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " problem" + (
             "s" if user_lb[i][0] != 1 else ""))
