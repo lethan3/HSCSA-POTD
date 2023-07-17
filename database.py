@@ -8,22 +8,30 @@ from dotenv import load_dotenv
 
 class Database:
     def __init__(self):
-        load_dotenv('.env')
-        self.conn = psycopg2.connect(database=os.environ.get("DB_NAME"), user=os.environ.get("DB_USERNAME"),
-                                     password=os.environ.get("DB_PASSWORD"), host="127.0.0.1", port="5432")
+        load_dotenv(".env")
+        self.conn = psycopg2.connect(
+            database=os.environ.get("DB_NAME"),
+            user=os.environ.get("DB_USERNAME"),
+            password=os.environ.get("DB_PASSWORD"),
+            host="127.0.0.1",
+            port="5432",
+        )
         self.make_tables()
 
     def make_tables(self):
         cmds = []
-        cmds.append("""
+        cmds.append(
+            """
                         CREATE TABLE IF NOT EXISTS handles(
                            guild BIGINT,
                            discord_id BIGINT,
                            cf_handle TEXT,
                            rating INT
                     )
-                    """)
-        cmds.append("""
+                    """
+        )
+        cmds.append(
+            """
                         CREATE TABLE IF NOT EXISTS problems(
                             id INT,
                             index TEXT,
@@ -33,21 +41,26 @@ class Database:
                             tags TEXT,
                             used BOOLEAN
                     )
-                    """)
-        cmds.append("""
+                    """
+        )
+        cmds.append(
+            """
                         CREATE TABLE IF NOT EXISTS contests(
                             id INT, 
                             name TEXT
                     )
-                    """)
-        cmds.append("""
+                    """
+        )
+        cmds.append(
+            """
                         CREATE TABLE IF NOT EXISTS potds(
                             id INT,
                             index TEXT,
                             name TEXT,
                             use_date DATE
                     )
-                    """)
+                    """
+        )
         try:
             curr = self.conn.cursor()
             for x in cmds:
@@ -121,10 +134,10 @@ class Database:
                         WHERE
                         id = %s AND index = %s
                     """
-            curr.execute(query, (id.split('/')[0], id.split('/')[1]))
+            curr.execute(query, (id.split("/")[0], id.split("/")[1]))
 
         res = curr.fetchall()
-        Problem = namedtuple('Problem', 'id index name type rating used')
+        Problem = namedtuple("Problem", "id index name type rating used")
         curr.close()
         data = []
         for x in res:
@@ -174,7 +187,9 @@ class Database:
                     ADD %s BOOLEAN DEFAULT false
                 """
         curr = self.conn.cursor()
-        curr.execute(query % ('"' + 'solved_' + datetime.today().strftime('%Y-%m-%d') + '"',))
+        curr.execute(
+            query % ('"' + "solved_" + datetime.today().strftime("%Y-%m-%d") + '"',)
+        )
         self.conn.commit()
         curr.close()
 
@@ -185,7 +200,7 @@ class Database:
                     (%s, %s, %s, %s)
                 """
         curr = self.conn.cursor()
-        curr.execute(query, (id, index, name, datetime.today().strftime('%Y-%m-%d')))
+        curr.execute(query, (id, index, name, datetime.today().strftime("%Y-%m-%d")))
         self.conn.commit()
         curr.close()
 
@@ -196,11 +211,11 @@ class Database:
                     use_date=%s
                 """
         curr = self.conn.cursor()
-        curr.execute(query, (datetime.today().strftime('%Y-%m-%d'),))
+        curr.execute(query, (datetime.today().strftime("%Y-%m-%d"),))
         data = curr.fetchall()
         curr.close()
 
-        Problem = namedtuple('Problem', 'id index name')
+        Problem = namedtuple("Problem", "id index name")
         if len(data) == 0:
             return None
         return Problem(data[-1][0], data[-1][1], data[-1][2])
@@ -223,7 +238,13 @@ class Database:
                     WHERE cf_handle=%s
                 """
         curr = self.conn.cursor()
-        curr.execute(query % ('"' + 'solved_' + datetime.today().strftime('%Y-%m-%d') + '"', "'" + cf_handle + "'"))
+        curr.execute(
+            query
+            % (
+                '"' + "solved_" + datetime.today().strftime("%Y-%m-%d") + '"',
+                "'" + cf_handle + "'",
+            )
+        )
         self.conn.commit()
         curr.close()
 

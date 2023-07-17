@@ -18,38 +18,38 @@ import database
 from constants import POTD_PROBLEMS, POTD_GUILD, POTD_ANNOUNCE
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.getenv("DISCORD_TOKEN")
 
-bot = commands.Bot(command_prefix='.', intents=discord.Intents.all())
+bot = commands.Bot(command_prefix=".", intents=discord.Intents.all())
 
 global db, cf
 
 cf_colors: Dict[str, int] = {
-    'unrated': 0x000000,
-    'newbie': 0x808080,
-    'pupil': 0x008000,
-    'specialist': 0x03a89e,
-    'expert': 0x0000ff,
-    'candidate master': 0xaa00aa,
-    'master': 0xff8c00,
-    'international master': 0xf57500,
-    'grandmaster': 0xff3030,
-    'international grandmaster': 0xff0000,
-    'legendary grandmaster': 0xcc0000
+    "unrated": 0x000000,
+    "newbie": 0x808080,
+    "pupil": 0x008000,
+    "specialist": 0x03A89E,
+    "expert": 0x0000FF,
+    "candidate master": 0xAA00AA,
+    "master": 0xFF8C00,
+    "international master": 0xF57500,
+    "grandmaster": 0xFF3030,
+    "international grandmaster": 0xFF0000,
+    "legendary grandmaster": 0xCC0000,
 }
 
 
 @bot.event
 async def on_ready():
     global db, cf
-    print(f'{bot.user} has connected to Discord')
+    print(f"{bot.user} has connected to Discord")
 
     db = database.Database()
     cf = cf_api.CodeforcesAPI()
-    print('Database and CF API initialized')
+    print("Database and CF API initialized")
 
     await update_problemset()
-    print('Problemset updated')
+    print("Problemset updated")
 
     if db.get_potd() is None:
         await select_potd()
@@ -58,18 +58,20 @@ async def on_ready():
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(select_potd, CronTrigger(hour="0"))
-    scheduler.add_job(update_solvers, 'interval', minutes=1)
+    scheduler.add_job(update_solvers, "interval", minutes=1)
     scheduler.start()
 
 
-@bot.command(name='identify_handle', help='Set your CF handle')
+@bot.command(name="identify_handle", help="Set your CF handle")
 async def identify_handle(ctx: commands.Context, handle: str = None):
     if handle is None:
         await ctx.send("Please specify a Codeforces handle.")
         return
     if db.get_handle(ctx.guild.id, ctx.author.id):
-        await ctx.send(f"Your handle is already set to {db.get_handle(ctx.guild.id, ctx.author.id)}, "
-                       f"ask an admin or mod to remove it first and try again.")
+        await ctx.send(
+            f"Your handle is already set to {db.get_handle(ctx.guild.id, ctx.author.id)}, "
+            f"ask an admin or mod to remove it first and try again."
+        )
         return
 
     data = await cf.check_handle(handle)
@@ -78,18 +80,19 @@ async def identify_handle(ctx: commands.Context, handle: str = None):
         return
 
     data = data[1]
-    handle = data['handle']
+    handle = data["handle"]
 
     # 2 discord users setting same handle
     handles = list(filter(lambda x: x[2] == handle, db.get_all_handles(ctx.guild.id)))
     if len(handles):
-        await ctx.send('That handle is already in use')
+        await ctx.send("That handle is already in use")
         return
 
-    res = ''.join(random.choices(string.ascii_uppercase + string.digits, k=15))
+    res = "".join(random.choices(string.ascii_uppercase + string.digits, k=15))
     await ctx.send(
         f"Please change your first name on https://codeforces.com/settings/social to "
-        f"`{res}` within 30 seconds {ctx.author.mention}")
+        f"`{res}` within 30 seconds {ctx.author.mention}"
+    )
     await asyncio.sleep(30)
 
     if res != await cf.get_first_name(handle):
@@ -101,35 +104,43 @@ async def identify_handle(ctx: commands.Context, handle: str = None):
         rating = 0
         rank = "unrated"
     else:
-        rating = data['rating']
-        rank = data['rank']
+        rating = data["rating"]
+        rank = data["rank"]
     db.add_handle(ctx.guild.id, member.id, handle, rating)
-    embed = discord.Embed(
-        description=f'Handle for {member.mention} successfully set to [{handle}](https://codeforces.com/profile/{handle})',
-        color=Color(cf_colors[rank.lower()]))
-    embed.add_field(name='Rank', value=f'{rank}', inline=True)
-    embed.add_field(name='Rating', value=f'{rating}', inline=True)
-    embed.set_thumbnail(url=f"{data['titlePhoto']}")
+    embed = (
+        Embed(
+            description=f"Handle for {member.mention} successfully set to [{handle}](https://codeforces.com/profile/{handle})",
+            color=Color(cf_colors[rank.lower()]),
+        )
+        .add_field(name="Rank", value=f"{rank}", inline=True)
+        .add_field(name="Rating", value=f"{rating}", inline=True)
+        .set_thumbnail(url=f"{data['titlePhoto']}")
+    )
     await ctx.send(embed=embed)
 
 
 def has_admin_privilege(ctx: commands.Context) -> bool:
     if ctx.channel.permissions_for(ctx.author).manage_guild:
         return True
-    for role in ['POTD Manager']:
+    for role in ["POTD Manager"]:
         if role.lower() in [x.name.lower() for x in ctx.author.roles]:
             return True
     return False
 
 
-@bot.command(name="set_handle", help="Set someone's handle (Admin/Mod/Lockout Manager only)")
-async def set_handle(ctx: commands.Context, member: discord.Member = None, handle: str = None):
+@bot.command(
+    name="set_handle", help="Set someone's handle (Admin/Mod/Lockout Manager only)"
+)
+async def set_handle(
+    ctx: commands.Context, member: discord.Member = None, handle: str = None
+):
     if handle is None or member is None:
-        await ctx.send('Please specify a user and Codeforces handle.')
+        await ctx.send("Please specify a user and Codeforces handle.")
         return
     if not has_admin_privilege(ctx):
         await ctx.send(
-            f"{ctx.author.mention} you require 'manage server' permission or the POTD Manager role to use this command")
+            f"{ctx.author.mention} you require 'manage server' permission or the POTD Manager role to use this command"
+        )
         return
 
     data = await cf.check_handle(handle)
@@ -137,14 +148,16 @@ async def set_handle(ctx: commands.Context, member: discord.Member = None, handl
         await ctx.send(data[1])
         return
 
-    handle = data[1]['handle']
+    handle = data[1]["handle"]
     if db.get_handle(ctx.guild.id, member.id):
-        await ctx.send(f"Handle for user {member.mention} already set to {db.get_handle(ctx.guild.id, member.id)}")
+        await ctx.send(
+            f"Handle for user {member.mention} already set to {db.get_handle(ctx.guild.id, member.id)}"
+        )
         return
     # 2 discord users setting same handle
     handles = list(filter(lambda x: x[2] == handle, db.get_all_handles(ctx.guild.id)))
     if len(handles):
-        await ctx.send('That handle is already in use')
+        await ctx.send("That handle is already in use")
         return
 
     # all conditions met
@@ -153,24 +166,27 @@ async def set_handle(ctx: commands.Context, member: discord.Member = None, handl
         rating = 0
         rank = "unrated"
     else:
-        rating = data['rating']
-        rank = data['rank']
+        rating = data["rating"]
+        rank = data["rank"]
     db.add_handle(ctx.guild.id, member.id, handle, rating)
-    embed = discord.Embed(
-        description=f'Handle for user {member.mention} successfully set to [{handle}](https://codeforces.com/profile/{handle})',
-        color=Color(cf_colors[rank.lower()]))
-    embed.add_field(name='Rank', value=f'{rank}', inline=True)
-    embed.add_field(name='Rating', value=f'{rating}', inline=True)
-    embed.set_thumbnail(url=f"{data['titlePhoto']}")
+    embed = (
+        Embed(
+            description=f"Handle for user {member.mention} successfully set to [{handle}](https://codeforces.com/profile/{handle})",
+            color=Color(cf_colors[rank.lower()]),
+        )
+        .add_field(name="Rank", value=f"{rank}", inline=True)
+        .add_field(name="Rating", value=f"{rating}", inline=True)
+        .set_thumbnail(url=f"{data['titlePhoto']}")
+    )
     await ctx.send(embed=embed)
 
 
-@bot.command(name='get_handle', help='Get your CF handle')
+@bot.command(name="get_handle", help="Get your CF handle")
 async def get_handle(ctx: commands.Context, member: discord.Member = None):
     if member is None:
         member = ctx.author
     if not db.get_handle(ctx.guild.id, member.id):
-        await ctx.send(f'Handle for {member.mention} is not set currently')
+        await ctx.send(f"Handle for {member.mention} is not set currently")
         return
     handle = db.get_handle(ctx.guild.id, member.id)
     data = await cf.check_handle(handle)
@@ -183,24 +199,31 @@ async def get_handle(ctx: commands.Context, member: discord.Member = None):
         rating = 0
         rank = "unrated"
     else:
-        rating = data['rating']
-        rank = data['rank']
-    embed = discord.Embed(
-        description=f'Handle for {member.mention} currently set to [{handle}](https://codeforces.com/profile/{handle})',
-        color=Color(cf_colors[rank.lower()]))
-    embed.add_field(name='Rank', value=f'{rank}', inline=True)
-    embed.add_field(name='Rating', value=f'{rating}', inline=True)
-    embed.set_thumbnail(url=f"{data['titlePhoto']}")
+        rating = data["rating"]
+        rank = data["rank"]
+    embed = (
+        Embed(
+            description=f"Handle for {member.mention} currently set to [{handle}](https://codeforces.com/profile/{handle})",
+            color=Color(cf_colors[rank.lower()]),
+        )
+        .add_field(name="Rank", value=f"{rank}", inline=True)
+        .add_field(name="Rating", value=f"{rating}", inline=True)
+        .set_thumbnail(url=f"{data['titlePhoto']}")
+    )
     await ctx.send(embed=embed)
 
 
-@bot.command(name="remove_handle", help="Remove someone's handle (Admin/Mod/Lockout Manager only)")
+@bot.command(
+    name="remove_handle",
+    help="Remove someone's handle (Admin/Mod/Lockout Manager only)",
+)
 async def remove_handle(ctx: commands.Context, member: discord.Member = None):
     if member is None:
         await ctx.send("Please specify a member.")
     if not has_admin_privilege(ctx):
         await ctx.send(
-            f"{ctx.author.mention} you require 'manage server' permission or the POTD Manager role to use this command")
+            f"{ctx.author.mention} you require 'manage server' permission or the POTD Manager role to use this command"
+        )
         return
     if not db.get_handle(ctx.guild.id, member.id):
         await ctx.send(f"Handle for {member.mention} not set")
@@ -208,13 +231,29 @@ async def remove_handle(ctx: commands.Context, member: discord.Member = None):
 
     db.remove_handle(ctx.guild.id, member.id)
     await ctx.send(
-        embed=Embed(description=f"Handle for {member.mention} removed successfully", color=Color.green()))
+        embed=Embed(
+            description=f"Handle for {member.mention} removed successfully",
+            color=Color.green(),
+        )
+    )
 
 
 def is_non_standard(contest_name: str) -> bool:
     names = [
-        'wild', 'fools', 'unrated', 'surprise', 'unknown', 'friday', 'q#', 'testing',
-        'marathon', 'kotlin', 'onsite', 'experimental', 'abbyy']
+        "wild",
+        "fools",
+        "unrated",
+        "surprise",
+        "unknown",
+        "friday",
+        "q#",
+        "testing",
+        "marathon",
+        "kotlin",
+        "onsite",
+        "experimental",
+        "abbyy",
+    ]
     for x in names:
         if x in contest_name.lower():
             return True
@@ -232,17 +271,31 @@ async def update_problemset():
     con_cnt, prob_cnt = 0, 0
 
     for contest in contest_list:
-        mapping[contest['id']] = contest['name']
-        if contest['id'] not in contest_id and contest['phase'] == "FINISHED" and not is_non_standard(contest['name']):
+        mapping[contest["id"]] = contest["name"]
+        if (
+            contest["id"] not in contest_id
+            and contest["phase"] == "FINISHED"
+            and not is_non_standard(contest["name"])
+        ):
             con_cnt += 1
-            db.add_contest(contest['id'], contest['name'])
+            db.add_contest(contest["id"], contest["name"])
 
     for problem in problem_list:
-        if problem['contestId'] in mapping and not is_non_standard(
-                mapping[problem['contestId']]) and 'rating' in problem and problem['contestId'] not in problem_id:
+        if (
+            problem["contestId"] in mapping
+            and not is_non_standard(mapping[problem["contestId"]])
+            and "rating" in problem
+            and problem["contestId"] not in problem_id
+        ):
             prob_cnt += 1
-            db.add_problem(problem['contestId'], problem['index'], problem['name'], problem['type'], problem['rating'],
-                           False)
+            db.add_problem(
+                problem["contestId"],
+                problem["index"],
+                problem["name"],
+                problem["type"],
+                problem["rating"],
+                False,
+            )
 
 
 async def find_problem(rating):
@@ -267,12 +320,14 @@ async def select_potd():
     problem = (await find_problem(diff))[0]
     db.add_potd(id=problem.id, index=problem.index, name=problem.name)
     db.set_used(id=problem.id, index=problem.index, name=problem.name)
-    msg: discord.Message = await bot.get_channel(POTD_PROBLEMS).send("<@&1120846668833771560>",
-                                                                     embed=Embed(
-                                                                         title="POTD " + datetime.today().strftime(
-                                                                             '%m/%d/%Y'),
-                                                                         description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
-                                                                         color=Color.blue()))
+    msg: discord.Message = await bot.get_channel(POTD_PROBLEMS).send(
+        "<@&1120846668833771560>",
+        embed=Embed(
+            title="POTD " + datetime.today().strftime("%m/%d/%Y"),
+            description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
+            color=Color.blue(),
+        ),
+    )
     await msg.publish()
 
 
@@ -280,30 +335,40 @@ async def select_potd():
 async def get_potd(ctx: commands.Context):
     problem = db.get_potd()
     await ctx.send(
-        embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'),
-                    description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
-                    color=Color.blue()))
+        embed=Embed(
+            title="POTD " + datetime.today().strftime("%m/%d/%Y"),
+            description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
+            color=Color.blue(),
+        )
+    )
 
 
 async def check_solved(handle, id, index) -> bool:
     subs = await cf.get_user_problems(handle, 50)
-    if not subs[0]: return False
+    if not subs[0]:
+        return False
     for x in subs[1]:
         if x.id == int(id) and x.index == index:
-            if x.verdict == 'OK':
+            if x.verdict == "OK":
                 return True
     return False
 
 
 async def update_solvers():
     problem = db.get_potd()
-    if problem is None: return
+    if problem is None:
+        return
     users = db.get_all_handles(POTD_GUILD)
     for user in users:
-        if await check_solved(user[2], problem.id, problem.index) and not db.check_user_potd(user[2]):
+        if await check_solved(
+            user[2], problem.id, problem.index
+        ) and not db.check_user_potd(user[2]):
             db.set_user_potd(user[2])
             msg: discord.Message = await bot.get_channel(POTD_ANNOUNCE).send(
-                f"Congratulations to <@{user[1]}> for solving POTD " + datetime.today().strftime('%m/%d/%Y') + "!")
+                f"Congratulations to <@{user[1]}> for solving POTD "
+                + datetime.today().strftime("%m/%d/%Y")
+                + "!"
+            )
             await msg.publish()
             await msg.add_reaction("<:orz:1105018917828698204>")
     print("Solvers updated")
@@ -312,11 +377,15 @@ async def update_solvers():
 @bot.command(name="update_potd", help="Update list of POTD solvers")
 async def update_potd(ctx: commands.Context):
     await update_solvers()
-    success_embed: discord.Embed = Embed(title="POTD solvers updated", color=Color.green())
+    success_embed: Embed = Embed(
+        title="POTD solvers updated", color=Color.green()
+    )
     await ctx.send(embed=success_embed)
 
 
-@bot.command(name="streak_leaderboard", help="Show leaderboard of current streak holders")
+@bot.command(
+    name="streak_leaderboard", help="Show leaderboard of current streak holders"
+)
 async def streak_leaderboard(ctx: commands.Context):
     users = db.get_all_handles()
     user_lb = []
@@ -337,10 +406,22 @@ async def streak_leaderboard(ctx: commands.Context):
     for i in range(len(user_lb)):
         if i == 0 or user_lb[i - 1][0] != user_lb[i][0]:
             curr_place = i + 1
-        lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " day" + (
-            "s" if user_lb[i][0] != 1 else ""))
-    await ctx.send(embed=Embed(title="Current Streak Leaderboard",
-                               description=discord.utils.escape_markdown('\n'.join(lb_strings)), color=Color.orange()))
+        lb_strings.append(
+            str(curr_place)
+            + "\U0000200D. "
+            + user_lb[i][1]
+            + " - "
+            + str(user_lb[i][0])
+            + " day"
+            + ("s" if user_lb[i][0] != 1 else "")
+        )
+    await ctx.send(
+        embed=Embed(
+            title="Current Streak Leaderboard",
+            description=discord.utils.escape_markdown("\n".join(lb_strings)),
+            color=Color.orange(),
+        )
+    )
 
 
 @bot.command(name="solves_leaderboard", help="Show leaderboard of problems solved")
@@ -359,10 +440,22 @@ async def solves_leaderboard(ctx: commands.Context):
     for i in range(len(user_lb)):
         if i == 0 or user_lb[i - 1][0] != user_lb[i][0]:
             curr_place = i + 1
-        lb_strings.append(str(curr_place) + "\U0000200D. " + user_lb[i][1] + " - " + str(user_lb[i][0]) + " problem" + (
-            "s" if user_lb[i][0] != 1 else ""))
-    await ctx.send(embed=Embed(title="Current Solves Leaderboard",
-                               description=discord.utils.escape_markdown('\n'.join(lb_strings)), color=Color.purple()))
+        lb_strings.append(
+            str(curr_place)
+            + "\U0000200D. "
+            + user_lb[i][1]
+            + " - "
+            + str(user_lb[i][0])
+            + " problem"
+            + ("s" if user_lb[i][0] != 1 else "")
+        )
+    await ctx.send(
+        embed=Embed(
+            title="Current Solves Leaderboard",
+            description=discord.utils.escape_markdown("\n".join(lb_strings)),
+            color=Color.purple(),
+        )
+    )
 
 
 if __name__ == "__main__":
