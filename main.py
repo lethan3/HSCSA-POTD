@@ -254,10 +254,7 @@ def is_non_standard(contest_name: str) -> bool:
         "experimental",
         "abbyy",
     ]
-    for x in names:
-        if x in contest_name.lower():
-            return True
-    return False
+    return any(x in contest_name.lower() for x in names)
 
 
 async def update_problemset():
