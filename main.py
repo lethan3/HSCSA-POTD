@@ -4,6 +4,7 @@ import os
 import random
 import string
 from datetime import datetime
+from typing import Dict
 
 import discord
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -23,7 +24,7 @@ bot = commands.Bot(command_prefix='.', intents=discord.Intents.all())
 
 global db, cf
 
-cf_colors = {
+cf_colors: Dict[str, int] = {
     'unrated': 0x000000,
     'newbie': 0x808080,
     'pupil': 0x008000,
