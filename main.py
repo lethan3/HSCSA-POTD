@@ -4,7 +4,7 @@ import os
 import random
 import string
 from datetime import datetime
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union, Optional
 
 import discord
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -51,7 +51,7 @@ async def on_ready():
     await update_problemset()
     print("Problemset updated")
 
-    if db.get_potd() is None:
+    if not db.get_potd():
         await select_potd()
     # await update_solvers()
     # print('Solvers updated')
@@ -63,8 +63,8 @@ async def on_ready():
 
 
 @bot.command(name="identify_handle", help="Set your CF handle")
-async def identify_handle(ctx: commands.Context, handle: str = None):
-    if handle is None:
+async def identify_handle(ctx: commands.Context, handle: Optional[str] = None):
+    if not handle:
         await ctx.send("Please specify a Codeforces handle.")
         return
     if db.get_handle(ctx.guild.id, ctx.author.id):
@@ -132,9 +132,9 @@ def has_admin_privilege(ctx: commands.Context) -> bool:
     name="set_handle", help="Set someone's handle (Admin/Mod/Lockout Manager only)"
 )
 async def set_handle(
-    ctx: commands.Context, member: discord.Member = None, handle: str = None
+    ctx: commands.Context, member: Optional[discord.Member] = None, handle: Optional[str] = None
 ):
-    if handle is None or member is None:
+    if not handle or not member:
         await ctx.send("Please specify a user and Codeforces handle.")
         return
     if not has_admin_privilege(ctx):
@@ -182,8 +182,8 @@ async def set_handle(
 
 
 @bot.command(name="get_handle", help="Get your CF handle")
-async def get_handle(ctx: commands.Context, member: discord.Member = None):
-    if member is None:
+async def get_handle(ctx: commands.Context, member: Optional[discord.Member] = None):
+    if not member:
         member = ctx.author
     if not db.get_handle(ctx.guild.id, member.id):
         await ctx.send(f"Handle for {member.mention} is not set currently")
@@ -217,8 +217,8 @@ async def get_handle(ctx: commands.Context, member: discord.Member = None):
     name="remove_handle",
     help="Remove someone's handle (Admin/Mod/Lockout Manager only)",
 )
-async def remove_handle(ctx: commands.Context, member: discord.Member = None):
-    if member is None:
+async def remove_handle(ctx: commands.Context, member: Optional[discord.Member] = None):
+    if not member:
         await ctx.send("Please specify a member.")
     if not has_admin_privilege(ctx):
         await ctx.send(
@@ -356,7 +356,7 @@ async def check_solved(handle, id, index) -> bool:
 
 async def update_solvers():
     problem = db.get_potd()
-    if problem is None:
+    if not problem:
         return
     users = db.get_all_handles(POTD_GUILD)
     for user in users:
