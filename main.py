@@ -298,7 +298,7 @@ async def update_problemset():
             )
 
 
-async def find_problem(rating):
+async def find_problem(rating) -> List[Union[bool, str]]:
     all_problems = db.get_problems()
 
     problem = None
@@ -306,11 +306,11 @@ async def find_problem(rating):
     weights = [int(p.id * math.sqrt(p.id)) for p in options]
     if options:
         return random.choices(options, weights, k=1)
-    if not problem:
+    else:
         return [False, f"Not enough problems with rating {rating} left!"]
 
 
-potd_difficulties = [800, 1200, 900, 1300, 1000, 1600, 1400]
+potd_difficulties: List[int] = [800, 1200, 900, 1300, 1000, 1600, 1400]
 
 
 async def select_potd():
@@ -377,9 +377,7 @@ async def update_solvers():
 @bot.command(name="update_potd", help="Update list of POTD solvers")
 async def update_potd(ctx: commands.Context):
     await update_solvers()
-    success_embed: Embed = Embed(
-        title="POTD solvers updated", color=Color.green()
-    )
+    success_embed: Embed = Embed(title="POTD solvers updated", color=Color.green())
     await ctx.send(embed=success_embed)
 
 
