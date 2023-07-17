@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 import asyncio
 from collections import namedtuple
+from typing import Any, Dict, Iterable, Literal, Optional, Union
 
 import aiohttp
 
 
 class CodeforcesAPI:
-    def __init__(self):
+    def __init__(self: CodeforcesAPI):
         pass
 
-    async def api_response(self, url, params=None):
+    async def api_response(
+        self: CodeforcesAPI, url: str, params: Optional[Union[Dict[str, Any], Iterable[str]]] = None
+    ) -> Optional[Dict[str, Any]]:
         try:
             tries = 0
             async with aiohttp.ClientSession() as session:
@@ -29,11 +34,14 @@ class CodeforcesAPI:
                             await asyncio.sleep(1)
                         else:
                             return response
-                return response
+                else:
+                    return response
         except Exception as e:
             return None
 
-    async def check_handle(self, handle):
+    async def check_handle(
+        self: CodeforcesAPI, handle: str
+    ) -> Iterable[Union[bool, str, None]]:
         url = f"https://codeforces.com/api/user.info?handles={handle}"
         response = await self.api_response(url)
         if not response:
@@ -43,7 +51,9 @@ class CodeforcesAPI:
         else:
             return [True, response["result"][0]]
 
-    async def get_contest_list(self):
+    async def get_contest_list(
+        self: CodeforcesAPI,
+    ) -> Union[Iterable[Dict[str, str]], Literal[False]]:
         url = "https://codeforces.com/api/contest.list"
         response = await self.api_response(url)
         if not response:
@@ -51,7 +61,9 @@ class CodeforcesAPI:
         else:
             return response["result"]
 
-    async def get_problem_list(self):
+    async def get_problem_list(
+        self: CodeforcesAPI,
+    ) -> Union[Iterable[Dict[str, str]], Literal[False]]:
         url = "https://codeforces.com/api/problemset.problems"
         response = await self.api_response(url)
         if not response:
@@ -59,7 +71,9 @@ class CodeforcesAPI:
         else:
             return response["result"]["problems"]
 
-    async def get_user_problems(self, handle, count=None):
+    async def get_user_problems(
+        self: CodeforcesAPI, handle: str, count: int = None
+    ) -> Iterable[Union[bool, str, Iterable[Any], None]]:
         url = f"https://codeforces.com/api/user.status?handle={handle}"
         if count:
             url += f"&from=1&count={count}"
@@ -94,7 +108,9 @@ class CodeforcesAPI:
         except Exception as e:
             return [False, str(e)]
 
-    async def get_rating(self, handle):
+    async def get_rating(
+        self: CodeforcesAPI, handle: str
+    ) -> Optional[Union[int, Literal[0]]]:
         url = f"https://codeforces.com/api/user.info?handles={handle}"
         response = await self.api_response(url)
         if response is None:
@@ -104,14 +120,16 @@ class CodeforcesAPI:
         else:
             return 0
 
-    async def get_first_name(self, handle):
+    async def get_first_name(self: CodeforcesAPI, handle: str) -> Optional[str]:
         url = f"https://codeforces.com/api/user.info?handles={handle}"
         response = await self.api_response(url)
         if not response or "firstName" not in response["result"][0]:
             return None
         return response["result"][0]["firstName"]
 
-    async def get_user_info(self, handles):
+    async def get_user_info(self: CodeforcesAPI, handles: Iterable[str]) -> Optional[Dict[str, Any]]:
         url = f"https://codeforces.com/api/user.info"
         response = await self.api_response(url, handles)
+        if not response: # Codeforces API Error
+            return None
         return response["result"]
