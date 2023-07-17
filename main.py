@@ -267,9 +267,11 @@ async def select_potd():
     db.add_potd(id=problem.id, index=problem.index, name=problem.name)
     db.set_used(id=problem.id, index=problem.index, name=problem.name)
     msg: discord.Message = await bot.get_channel(POTD_PROBLEMS).send("<@&1120846668833771560>",
-                                                    embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'),
-                                                                description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
-                                                                color=Color.blue()))
+                                                                     embed=Embed(
+                                                                         title="POTD " + datetime.today().strftime(
+                                                                             '%m/%d/%Y'),
+                                                                         description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
+                                                                         color=Color.blue()))
     await msg.publish()
 
 
@@ -309,6 +311,8 @@ async def update_solvers():
 @bot.command(name="update_potd", help="Update list of POTD solvers")
 async def update_potd(ctx: commands.Context):
     await update_solvers()
+    success_embed: discord.Embed = Embed(title="POTD solvers updated", color=Color.green())
+    await ctx.send(embed=success_embed)
 
 
 @bot.command(name="streak_leaderboard", help="Show leaderboard of current streak holders")
@@ -358,6 +362,7 @@ async def solves_leaderboard(ctx: commands.Context):
             "s" if user_lb[i][0] != 1 else ""))
     await ctx.send(embed=Embed(title="Current Solves Leaderboard",
                                description=discord.utils.escape_markdown('\n'.join(lb_strings)), color=Color.purple()))
+
 
 if __name__ == "__main__":
     bot.run(TOKEN)
