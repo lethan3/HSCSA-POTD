@@ -62,7 +62,7 @@ async def on_ready():
 
 
 @bot.command(name='identify_handle', help='Set your CF handle')
-async def identify_handle(ctx, handle: str = None):
+async def identify_handle(ctx: commands.Context, handle: str = None):
     if handle is None:
         await ctx.send("Please specify a Codeforces handle.")
         return
@@ -112,7 +112,7 @@ async def identify_handle(ctx, handle: str = None):
     await ctx.send(embed=embed)
 
 
-def has_admin_privilege(ctx):
+def has_admin_privilege(ctx: commands.Context) -> bool:
     if ctx.channel.permissions_for(ctx.author).manage_guild:
         return True
     for role in ['POTD Manager']:
@@ -122,7 +122,7 @@ def has_admin_privilege(ctx):
 
 
 @bot.command(name="set_handle", help="Set someone's handle (Admin/Mod/Lockout Manager only)")
-async def set_handle(ctx, member: discord.Member = None, handle: str = None):
+async def set_handle(ctx: commands.Context, member: discord.Member = None, handle: str = None):
     if handle is None or member is None:
         await ctx.send('Please specify a user and Codeforces handle.')
         return
@@ -165,7 +165,7 @@ async def set_handle(ctx, member: discord.Member = None, handle: str = None):
 
 
 @bot.command(name='get_handle', help='Get your CF handle')
-async def get_handle(ctx, member: discord.Member = None):
+async def get_handle(ctx: commands.Context, member: discord.Member = None):
     if member is None:
         member = ctx.author
     if not db.get_handle(ctx.guild.id, member.id):
@@ -194,9 +194,9 @@ async def get_handle(ctx, member: discord.Member = None):
 
 
 @bot.command(name="remove_handle", help="Remove someone's handle (Admin/Mod/Lockout Manager only)")
-async def remove_handle(ctx, member: discord.Member = None):
+async def remove_handle(ctx: commands.Context, member: discord.Member = None):
     if member is None:
-        ctx.send("Please specify a member.")
+        await ctx.send("Please specify a member.")
     if not has_admin_privilege(ctx):
         await ctx.send(
             f"{ctx.author.mention} you require 'manage server' permission or the POTD Manager role to use this command")
@@ -210,7 +210,7 @@ async def remove_handle(ctx, member: discord.Member = None):
         embed=Embed(description=f"Handle for {member.mention} removed successfully", color=Color.green()))
 
 
-def is_non_standard(contest_name):
+def is_non_standard(contest_name: str) -> bool:
     names = [
         'wild', 'fools', 'unrated', 'surprise', 'unknown', 'friday', 'q#', 'testing',
         'marathon', 'kotlin', 'onsite', 'experimental', 'abbyy']
@@ -266,7 +266,7 @@ async def select_potd():
     problem = (await find_problem(diff))[0]
     db.add_potd(id=problem.id, index=problem.index, name=problem.name)
     db.set_used(id=problem.id, index=problem.index, name=problem.name)
-    msg = await bot.get_channel(POTD_PROBLEMS).send("<@&1120846668833771560>",
+    msg: discord.Message = await bot.get_channel(POTD_PROBLEMS).send("<@&1120846668833771560>",
                                                     embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'),
                                                                 description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
                                                                 color=Color.blue()))
@@ -274,7 +274,7 @@ async def select_potd():
 
 
 @bot.command(name="get_potd", help="Get the current POTD")
-async def get_potd(ctx):
+async def get_potd(ctx: commands.Context):
     problem = db.get_potd()
     await ctx.send(
         embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'),
@@ -282,7 +282,7 @@ async def get_potd(ctx):
                     color=Color.blue()))
 
 
-async def check_solved(handle, id, index):
+async def check_solved(handle, id, index) -> bool:
     subs = await cf.get_user_problems(handle, 50)
     if not subs[0]: return False
     for x in subs[1]:
@@ -299,7 +299,7 @@ async def update_solvers():
     for user in users:
         if await check_solved(user[2], problem.id, problem.index) and not db.check_user_potd(user[2]):
             db.set_user_potd(user[2])
-            msg = await bot.get_channel(POTD_ANNOUNCE).send(
+            msg: discord.Message = await bot.get_channel(POTD_ANNOUNCE).send(
                 f"Congratulations to <@{user[1]}> for solving POTD " + datetime.today().strftime('%m/%d/%Y') + "!")
             await msg.publish()
             await msg.add_reaction("<:orz:1105018917828698204>")
@@ -307,12 +307,12 @@ async def update_solvers():
 
 
 @bot.command(name="update_potd", help="Update list of POTD solvers")
-async def update_potd(ctx):
+async def update_potd(ctx: commands.Context):
     await update_solvers()
 
 
 @bot.command(name="streak_leaderboard", help="Show leaderboard of current streak holders")
-async def streak_leaderboard(ctx):
+async def streak_leaderboard(ctx: commands.Context):
     users = db.get_all_handles()
     user_lb = []
     for user in users:
@@ -339,7 +339,7 @@ async def streak_leaderboard(ctx):
 
 
 @bot.command(name="solves_leaderboard", help="Show leaderboard of problems solved")
-async def solves_leaderboard(ctx):
+async def solves_leaderboard(ctx: commands.Context):
     users = db.get_all_handles()
     user_lb = []
     for user in users:
@@ -359,5 +359,5 @@ async def solves_leaderboard(ctx):
     await ctx.send(embed=Embed(title="Current Solves Leaderboard",
                                description=discord.utils.escape_markdown('\n'.join(lb_strings)), color=Color.purple()))
 
-
-bot.run(TOKEN)
+if __name__ == "__main__":
+    bot.run(TOKEN)
