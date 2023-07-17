@@ -4,7 +4,7 @@ import os
 import random
 import string
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List, Union, Tuple
 
 import discord
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -383,6 +383,29 @@ async def update_potd(ctx: commands.Context):
     await ctx.send(embed=success_embed)
 
 
+def format_number(number: int) -> str:
+    """Format an :class:`int` with commas.
+
+    Example:
+
+    ```python
+    >>> format_number(1000)
+    "1,000"
+    ```
+
+    Parameters
+    ----------
+    number: :class:`int`
+        The number to format.
+
+    Returns
+    -------
+    :class:`str`
+        The formatted number with commas.
+    """
+    return "{:,}".format(number)
+
+
 @bot.command(
     name="streak_leaderboard", help="Show leaderboard of current streak holders"
 )
@@ -411,7 +434,7 @@ async def streak_leaderboard(ctx: commands.Context):
             + "\U0000200D. "
             + user_lb[i][1]
             + " - "
-            + str(user_lb[i][0])
+            + format_number(user_lb[i][0])
             + " day"
             + ("s" if user_lb[i][0] != 1 else "")
         )
@@ -445,7 +468,7 @@ async def solves_leaderboard(ctx: commands.Context):
             + "\U0000200D. "
             + user_lb[i][1]
             + " - "
-            + str(user_lb[i][0])
+            + format_number(user_lb[i][0])
             + " problem"
             + ("s" if user_lb[i][0] != 1 else "")
         )
