@@ -15,10 +15,8 @@ class CodeforcesAPI:
         self: CodeforcesAPI, url: str, params: Optional[Union[Dict[str, Any], Iterable[str]]] = None
     ) -> Optional[Dict[str, Any]]:
         try:
-            tries = 0
             async with aiohttp.ClientSession() as session:
-                while tries < 5:
-                    tries += 1
+                for tries in range(5):
                     async with session.get(url, params=params) as resp:
                         response = {}
                         if resp.status == 503:
