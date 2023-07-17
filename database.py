@@ -1,10 +1,10 @@
-import psycopg2
 import os
-import time
+from collections import namedtuple
 from datetime import datetime
 
-from collections import namedtuple
+import psycopg2
 from dotenv import load_dotenv
+
 
 class Database:
     def __init__(self):
@@ -12,6 +12,7 @@ class Database:
         self.conn = psycopg2.connect(database=os.environ.get("DB_NAME"), user=os.environ.get("DB_USERNAME"),
                                      password=os.environ.get("DB_PASSWORD"), host="127.0.0.1", port="5432")
         self.make_tables()
+
     def make_tables(self):
         cmds = []
         cmds.append("""
@@ -129,7 +130,7 @@ class Database:
         for x in res:
             data.append(Problem(x[0], x[1], x[2], x[3], x[4], x[5]))
         return data
-    
+
     def get_contests_id(self):
         query = f"""
                     SELECT id from contests
@@ -214,7 +215,7 @@ class Database:
         data = curr.fetchone()
         curr.close()
         return data[-1]
-    
+
     def set_user_potd(self, cf_handle):
         query = f"""
                     UPDATE handles
@@ -248,6 +249,3 @@ class Database:
         curr.execute(query, (id, name))
         self.conn.commit()
         curr.close()
-
-
-

@@ -1,7 +1,7 @@
-import aiohttp
 import asyncio
-
 from collections import namedtuple
+
+import aiohttp
 
 
 class CodeforcesAPI:
