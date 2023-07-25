@@ -321,7 +321,7 @@ async def select_potd():
         "<@&1120846668833771560>",
         embed=Embed(
             title="POTD " + datetime.today().strftime("%m/%d/%Y"),
-            description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
+            description=f"\n[{problem.index + ". " + problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
             color=Color.blue(),
         ),
     )
@@ -334,7 +334,7 @@ async def get_potd(ctx: commands.Context):
     await ctx.send(
         embed=Embed(
             title="POTD " + datetime.today().strftime("%m/%d/%Y"),
-            description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
+            description=f"\n[{problem.name + " - " + problem.index}](https://codeforces.com/contest/{problem.id}/problem/{problem.index})",
             color=Color.blue(),
         )
     )
