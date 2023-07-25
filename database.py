@@ -229,7 +229,7 @@ class Database:
     def set_used(self, id, index, name):
         query = f"""
                     UPDATE problems
-                    SET used=True
+                    SET used = true
                     WHERE id = %s AND index = %s AND name = %s
                 """
         curr = self.conn.cursor()
