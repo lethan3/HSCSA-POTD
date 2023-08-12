@@ -19,7 +19,9 @@ import string
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-TOKEN = "MTExOTkwMzA2MDg0MDQzMTYxNg.GH3s9N.cHWUwScdYNOhoN7Yq18ajsgD9pA1b9gpLa5ano";
+from dotenv import load_dotenv
+
+TOKEN = os.getenv("token");
 
 bot = commands.Bot(command_prefix='.', intents=discord.Intents.all())
 
