@@ -265,7 +265,7 @@ async def select_potd():
 async def get_potd(ctx):
     problem = db.get_potd()
     await ctx.send(
-        embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
+        embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'), description=f"\n[{problem.index + ". " + problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
 
 async def check_solved(handle, id, index):
     subs = await cf.get_user_problems(handle, 50)
