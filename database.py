@@ -1,7 +1,7 @@
 import mysql.connector
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from collections import namedtuple
 from dotenv import load_dotenv
@@ -185,7 +185,8 @@ class Database:
                 """
         self.conn.reconnect()
         curr = self.conn.cursor()
-        curr.execute(query % ('`' + 'solved_' + datetime.today().strftime('%Y-%m-%d') + '`',))
+        date = datetime.today() - timedelta(hours = 7);
+        curr.execute(query % ('`' + 'solved_' + date.strftime('%Y-%m-%d') + '`',))
         self.conn.commit()
         curr.close()
 
@@ -197,7 +198,8 @@ class Database:
                 """
         self.conn.reconnect()
         curr = self.conn.cursor()
-        curr.execute(query, (id, rank, name, datetime.today().strftime('%Y-%m-%d')))
+        date = datetime.today() - timedelta(hours = 7);
+        curr.execute(query, (id, rank, name, date.strftime('%Y-%m-%d')))
         self.conn.commit()
         curr.close()
 
@@ -209,7 +211,8 @@ class Database:
                 """
         self.conn.reconnect()
         curr = self.conn.cursor()
-        curr.execute(query, (datetime.today().strftime('%Y-%m-%d'),))
+        date = datetime.today() - timedelta(hours = 7);
+        curr.execute(query, (date.strftime('%Y-%m-%d'),))
         data = curr.fetchall()
         curr.close()
 
@@ -238,7 +241,8 @@ class Database:
                 """
         self.conn.reconnect()
         curr = self.conn.cursor()
-        curr.execute(query % ('`' + 'solved_' + datetime.today().strftime('%Y-%m-%d') + '`', "'" + cf_handle + "'"))
+        date = datetime.today() - timedelta(hours = 7);
+        curr.execute(query % ('`' + 'solved_' + date.strftime('%Y-%m-%d') + '`', "'" + cf_handle + "'"))
         self.conn.commit()
         curr.close()
 

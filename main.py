@@ -59,7 +59,7 @@ async def on_ready():
     # print('Solvers updated')
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(select_potd, 'interval', minutes=60)
+    scheduler.add_job(select_potd, 'interval', minutes=10)
     scheduler.add_job(update_solvers, 'interval', minutes=1)
     scheduler.start()
 
@@ -253,19 +253,21 @@ potd_difficulties = [800, 1200, 900, 1300, 1000, 1600, 1400]
 async def select_potd():
     if (db.get_potd() is not None):
         return;
-    diff = potd_difficulties[datetime.today().weekday()]
+    date = datetime.today() - timedelta(hours = 7);
+    diff = potd_difficulties[date.weekday()]
     problem = (await find_problem(diff))[0]
     db.add_potd(id=problem.id, rank=problem.rank, name=problem.name)
     db.set_used(id=problem.id, rank=problem.rank, name=problem.name)
     msg = await bot.get_channel(POTD_PROBLEMS).send("<@&1120846668833771560>", 
-        embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
+        embed=Embed(title="POTD " + date.strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
     await msg.publish()
 
 @bot.command(name="get_potd", help="Get the current POTD")
 async def get_potd(ctx):
     problem = db.get_potd()
+    date = datetime.today() - timedelta(hours = 7);
     await ctx.send(
-        embed=Embed(title="POTD " + datetime.today().strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
+        embed=Embed(title="POTD " + date.today().strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
     
 async def check_solved(handle, id, index):
     subs = await cf.get_user_problems(handle, 50)
@@ -283,7 +285,8 @@ async def update_solvers():
     for user in users:
         if await check_solved(user[2], problem.id, problem.rank) and not db.check_user_potd(user[2]):
             db.set_user_potd(user[2])
-            msg = await bot.get_channel(POTD_ANNOUNCE).send(f"Congratulations to <@{user[1]}> for solving POTD " + datetime.today().strftime('%m/%d/%Y') + "!")
+            date = datetime.today() - timedelta(hours = 7);
+            msg = await bot.get_channel(POTD_ANNOUNCE).send(f"Congratulations to <@{user[1]}> for solving POTD " + date.strftime('%m/%d/%Y') + "!")
             await msg.publish()
             await msg.add_reaction("<:orz:1105018917828698204>")
     print("Solvers updated")
