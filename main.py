@@ -1,7 +1,7 @@
 import os
 import random
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 
 import discord
@@ -267,7 +267,7 @@ async def get_potd(ctx):
     problem = db.get_potd()
     date = datetime.today() - timedelta(hours = 7);
     await ctx.send(
-        embed=Embed(title="POTD " + date.today().strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
+        embed=Embed(title="POTD " + date.strftime('%m/%d/%Y'), description=f"\n[{problem.name}](https://codeforces.com/contest/{problem.id}/problem/{problem.rank})", color=Color.blue()))
     
 async def check_solved(handle, id, index):
     subs = await cf.get_user_problems(handle, 50)
